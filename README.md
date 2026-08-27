@@ -17,7 +17,12 @@
   </a>
 </p>
 
----
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=truepushkar&label=Profile%20views&color=a78bfa&style=flat-square" alt="Profile views" />
+  <a href="https://github.com/truepushkar?tab=followers">
+    <img src="https://img.shields.io/github/followers/truepushkar?label=Followers&style=flat-square&color=a78bfa&labelColor=0b1026" alt="Followers" />
+  </a>
+</p>
 
 ## About
 
@@ -33,15 +38,11 @@ learning:   Deeper backend engineering
 since:      2022
 ```
 
----
-
 ## Technology
 
 <p align="center">
   <img src="https://skillicons.dev/icons?i=python,flask,mongodb,mysql,html,css,js,tailwind,git,githubactions,vercel&theme=dark" alt="Python, Flask, MongoDB, MySQL, HTML, CSS, JavaScript, Tailwind, Git, GitHub Actions, Vercel" />
 </p>
-
----
 
 ## GitHub Activity
 
@@ -56,14 +57,4 @@ since:      2022
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/truepushkar/truepushkar/output/snake.svg" alt="GitHub contribution graph" />
-</p>
-
----
-
-<p align="center">
-  <sub>Open to collaboration on practical, well-scoped projects — reach me on <a href="https://x.com/TruePushkar">X</a>.</sub>
-</p>
-
-<p align="center">
-  <sub>Building useful things, one commit at a time.</sub>
 </p>
