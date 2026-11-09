@@ -52,7 +52,7 @@ since:      2022
 | **[R2-storage](https://github.com/truepushkar/R2-storage)** | Production-ready file storage as a single Cloudflare Worker on R2. Streaming uploads, range requests, auto-expiry, login + dashboard. | 1 | [demo](https://cdn.nullstacks.workers.dev/) |
 | **[GlazeStudio](https://github.com/truepushkar/GlazeStudio)** | CleanShot X–style screenshot beautifier with social post import, in a glass UI with light and dark mode. Entire editor is client-side. | 1 | [demo](https://glazestudio.vercel.app/) |
 | **[CampusHub](https://github.com/truepushkar/CampusHub)** | One dashboard for the six portals every campus somehow ends up with: events, notices, complaints, timetables, club spaces. | 3 | [demo](https://campus-hub-eta-eight.vercel.app) |
-| **[Portfolio](https://github.com/truepushkar/portfolio)** | The site version of all of this. | 0 | [demo](https://portfolio-liart-phi-41.vercel.app) |
+| **Portfolio** | The site version of all of this. | 0 | [demo](https://portfolio-liart-phi-41.vercel.app) |
 
 ### AI gateways
 
