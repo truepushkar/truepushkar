@@ -10,9 +10,7 @@ I build web apps around problems that are easy to see but needlessly complicated
 
 <p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/heading-activity.svg" width="100%" alt="GitHub Activity" /></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-stats.svg" width="100%" alt="GitHub statistics" /></p>
-
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-langs.svg" width="100%" alt="Top languages" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-overview.svg" width="100%" alt="GitHub statistics and top languages" /></p>
 
 <p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-streak.svg" width="100%" alt="GitHub contribution streak" /></p>
 

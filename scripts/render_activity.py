@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Render the four pixel-themed GitHub Activity cards (428px wide, same look as the rest).
+"""Render the three pixel-themed GitHub Activity cards (428px wide, same look as the rest).
 
-    cards/activity-stats.svg    stars / repos / commits / PRs / issues / followers
-    cards/activity-langs.svg    top languages
+    cards/activity-overview.svg stars / repos / commits / PRs + top languages
     cards/activity-streak.svg   contributions, current streak, longest streak
     cards/activity-graph.svg    12-month contribution grid with a sweeping scan line
 
@@ -143,7 +142,7 @@ def fetch_live(token):
 def num(val, x, y, cell, col, delay, max_w=112):
     """Bold pixel number; shrinks the pixel size until it fits max_w so columns never collide."""
     s = "-" if val is None else str(val)
-    while cell > 2 and len(s) * 7 * (cell + 1) - (cell + 1) > max_w:
+    while cell > 1 and len(s) * 7 * (cell + 1) - (cell + 1) > max_w:
         cell -= 1
     return rc.pixel_text(s, x, y, cell, 1, f'class="flick" style="--d:{delay:.2f}s;fill:var(--{col})"', bold=True), 7 * (cell + 1) - 1
 
@@ -156,46 +155,55 @@ def footer(d, extra=""):
     return f'<text class="mono mute" x="18" y="{{y}}" font-size="8.5" letter-spacing=".5">{rc.esc(txt)}{extra}</text>'
 
 
-def card_stats(d):
-    H = 150
-    items = [("STARS", d["stars"], "blue"), ("REPOS", d["repos"], "red"), ("COMMITS", d["commits"], "amber"),
-             ("PRS \u00b7 1Y", d["prs"], "teal"), ("ISSUES \u00b7 1Y", d["issues"], "blue"), ("FOLLOWERS", d["followers"], "red")]
+def numc(val, x, y, col, delay, max_w):
+    """Small bold pixel number (cell 2, drops to 1 if it would not fit max_w)."""
+    s = "-" if val is None else f"{val:,}" if isinstance(val, int) and val >= 10000 else str(val)
+    cell = 2
+    while cell > 1 and len(s) * 7 * (cell + 1) - (cell + 1) > max_w:
+        cell -= 1
+    return rc.pixel_text(s, x, y, cell, 1, f'class="flick" style="--d:{delay:.2f}s;fill:var(--{col})"', bold=True)
+
+
+def card_overview(d):
+    """Stats row + top languages in one compact card (replaces activity-stats + activity-langs)."""
+    H = 182
     out = [rc.frame(W, H, "blue")]
+    items = [("STARS", d["stars"], "blue"), ("REPOS", d["repos"], "red"), ("COMMITS", d["commits"], "amber"),
+             ("PRS \u00b7 1Y", d["prs"], "teal")]
+    pitch = (W - rc.SHADOW - 36) // len(items)
     for i, (lab, val, col) in enumerate(items):
-        r, c = divmod(i, 3)
-        x, y = 18 + c * 132, 16 + r * 58
-        svg_num, h = num(val, x, y, 3, col, 0.2 + i * 0.12)
-        out.append(svg_num)
-        out.append(f'<text class="mono mute" x="{x}" y="{y + h + 14}" font-size="9" letter-spacing="1">{rc.esc(lab)}</text>')
-    out.append(footer(d).replace("{y}", "138"))
-    return rc.svg(W, H, "".join(out), "GitHub statistics")
+        x = 18 + i * pitch
+        out.append(numc(val, x, 16, col, 0.2 + i * 0.1, pitch - 6))
+        out.append(f'<text class="mono mute" x="{x}" y="50" font-size="8" letter-spacing=".8">{lab}</text>')
+    out.append(f'<line class="march" x1="18" y1="63" x2="{W - rc.SHADOW - 18}" y2="63" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>')
 
-
-def card_langs(d):
     langs = d["langs"][:7]
     total = sum(v for _, v in langs) or 1
-    # percentage is of ALL counted bytes/repos, not just the top 7
-    all_total = d.get("lang_total") or total
+    all_total = d.get("lang_total") or total  # percentage of ALL counted bytes/repos, not just the top 7
     top = max(v for _, v in langs) if langs else 1
-    H = 40 + len(langs) * 20 + 30
-    out = [rc.frame(W, H, "amber")]
-    out.append('<text class="mono mute" x="18" y="26" font-size="9.5" letter-spacing="1.5">TOP LANGUAGES</text>')
+    out.append('<text class="mono mute" x="18" y="80" font-size="8.5" letter-spacing="1.5">TOP LANGUAGES</text>')
     palette = ["blue", "red", "amber", "teal"]
+    SEGS, COLW = 12, 194
     for i, (name, val) in enumerate(langs):
-        y = 40 + i * 20
+        r, c = divmod(i, 2)
+        x0, y = 18 + c * COLW, 90 + r * 16
         col = palette[i % 4]
-        pct = 100.0 * val / all_total
-        filled = max(1, round(20 * val / top))
-        out.append(f'<text class="mono" x="18" y="{y + 9}" font-size="10.5">{rc.esc(name)}</text>')
-        for s in range(20):
-            on = s < filled
+        filled = max(1, round(SEGS * val / top))
+        out.append(f'<text class="mono" x="{x0}" y="{y + 8}" font-size="9.5">{rc.esc(name)}</text>')
+        for sgi in range(SEGS):
+            on = sgi < filled
             fill = f"var(--{col})" if on else "var(--line)"
-            cls = f'class="pop" style="--d:{0.2 + i * 0.1 + s * 0.025:.2f}s"' if on else ""
-            out.append(f'<rect {cls} x="{108 + s * 10}" y="{y}" width="8" height="10" fill="{fill}"/>')
-        out.append(f'<text class="mono mute" x="{W - rc.SHADOW - 14}" y="{y + 9}" font-size="10.5" text-anchor="end">{pct:.1f}%</text>')
-    tag = "SNAPSHOT" if d["mode"] == "snapshot" else f'UPDATED {d["asof"]}'
-    out.append(f'<text class="mono mute" x="18" y="{H - 14}" font-size="8.5" letter-spacing=".5">{rc.esc(d["lang_note"])} \u00b7 {tag}</text>')
-    return rc.svg(W, H, "".join(out), "Top languages")
+            cls = f'class="pop" style="--d:{0.2 + i * 0.08 + sgi * 0.02:.2f}s"' if on else ""
+            out.append(f'<rect {cls} x="{x0 + 68 + sgi * 6}" y="{y}" width="5" height="9" fill="{fill}"/>')
+        out.append(f'<text class="mono mute" x="{x0 + COLW - 12}" y="{y + 8}" font-size="9.5" text-anchor="end">{100.0 * val / all_total:.1f}%</text>')
+
+    if d["mode"] == "snapshot":
+        tag = f'SNAPSHOT {d["asof"]} \u00b7 UPDATES AFTER FIRST WORKFLOW RUN'
+    else:
+        who = f'{LOGIN.upper()}' + "".join(f' + {o.upper()}' for o in ORGS)
+        tag = f'UPDATED {d["asof"]} \u00b7 {who}'
+    out.append(f'<text class="mono mute" x="18" y="{H - 14}" font-size="8" letter-spacing=".4">{rc.esc(tag)}</text>')
+    return rc.svg(W, H, "".join(out), "GitHub statistics and top languages")
 
 
 FLAME = ["00010000", "00110000", "01110100", "01111100", "11111110", "11111110", "01111100", "00111000"]
@@ -263,8 +271,7 @@ def card_graph(d):
 
 
 def render(d):
-    rc.write("activity-stats.svg", card_stats(d))
-    rc.write("activity-langs.svg", card_langs(d))
+    rc.write("activity-overview.svg", card_overview(d))
     rc.write("activity-streak.svg", card_streak(d))
     rc.write("activity-graph.svg", card_graph(d))
 
