@@ -137,6 +137,13 @@ text{font-family:%(sans)s;fill:var(--ink)}
 .zip{opacity:.4;transform-box:fill-box;transform-origin:center;animation:zip 4.2s linear var(--d,0s) infinite}
 .wave{opacity:.35;animation:wave 3.2s linear var(--d,0s) infinite}
 .sweep{transform-box:fill-box;transform-origin:center;animation:sweep 7s linear var(--d,0s) infinite}
+.cell{transform-box:fill-box;transform-origin:center;animation:cellin .5s cubic-bezier(.2,1.5,.4,1) var(--d,0s) backwards,scan 9s linear var(--s,0s) infinite}
+.cellbg{transform-box:fill-box;transform-origin:center;animation:cellin .5s cubic-bezier(.2,1.5,.4,1) var(--d,0s) backwards,scanbg 9s linear var(--s,0s) infinite}
+.ping{opacity:0;transform-box:fill-box;transform-origin:center;animation:ping 3.6s linear var(--d,0s) infinite}
+@keyframes cellin{from{opacity:0;transform:scale(0)}}
+@keyframes scan{0%%,6%%,100%%{transform:scale(1);fill:var(--teal)}1.5%%{transform:scale(1.55);fill:var(--ink)}3%%{transform:scale(1.15);fill:var(--teal)}}
+@keyframes scanbg{0%%,6%%,100%%{fill:var(--line)}1.5%%{fill:var(--mute)}}
+@keyframes ping{0%%{opacity:.9;transform:scale(1)}60%%,100%%{opacity:0;transform:scale(2.4)}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 @keyframes pop{from{opacity:0;transform:scale(.2)}}
 @keyframes fade{from{opacity:0}}
@@ -531,25 +538,24 @@ ICON_ID = {
     "React": "react", "Tailwind": "tailwind", "Cloudflare Workers": "workers", "Docker": "docker",
     "Git": "git", "GitHub Actions": "githubactions", "Vercel": "vercel", "PowerShell": "powershell",
 }
-SOCIAL_ICON = {"GITHUB": "github", "DISCORD": "discord", "X": "twitter", "EMAIL": "gmail"}  # YOUTUBE: no icon exists
 SKILL = "https://skillicons.dev/icons?i="
 
 
-def write_readme(chips=None, socials=None):
+def write_readme(socials):
     def img(name, alt, width):
         return f'<img src="{RAW}/{name}.svg" width="{width}" alt="{html.escape(alt)}" />'
 
     def c(name):  # inline tool: original logo + name (name only when skillicons has no icon)
         ic = ICON_ID.get(name)
         if not ic:
-            return name
-        return f'<img src="{SKILL}{ic}" width="20" height="20" align="absmiddle" alt="" /> {name}'
+            return f"<kbd>{name}</kbd>"
+        return f'<kbd><img src="{SKILL}{ic}" width="18" height="18" align="absmiddle" alt="" /> {name}</kbd>'
 
     tech_ids = ",".join(ICON_ID[n] for n, _ in TECH if n in ICON_ID)
     tech_alt = "Technology: " + ", ".join(n for n, _ in TECH if n in ICON_ID)
-    soc = "&nbsp;&nbsp;&nbsp;".join(
-        f'<a href="{url}"><img src="{SKILL}{SOCIAL_ICON[lab]}" width="44" height="44" alt="{lab.title()}" /></a>'
-        for lab, url, _, _ in SOCIALS if lab in SOCIAL_ICON)
+    soc = " ".join(
+        f'<a href="{url}"><img src="{RAW}/social-{lab.lower()}.svg" width="{socials[lab]}" height="{CH}" align="absmiddle" alt="{lab.title()}" /></a>'
+        for lab, url, _, _ in SOCIALS)
 
     parts = [
         f'<p>{img("headline", HEADLINE_ALT, WIDE_W)}</p>',
@@ -593,11 +599,16 @@ def main():
             if f.endswith(".svg") and not f.startswith("activity-"):  # activity cards come from render_activity.py
                 os.remove(os.path.join(CARDS, f))
     write("headline.svg", headline())
+    socials = {}
+    for lab, _, col, sk in SOCIALS:
+        w, content = social_chip(lab, col, sk)
+        socials[lab] = w
+        write(f"social-{lab.lower()}.svg", content)
     write("about.svg", about_card())
     write("heading-technology.svg", heading("TECHNOLOGY", "amber", "Technology", 1))
     write("heading-activity.svg", heading("ACTIVITY", "teal", "GitHub Activity", 2))
     write("divider.svg", divider())
-    write_readme()
+    write_readme(socials)
 
 
 if __name__ == "__main__":

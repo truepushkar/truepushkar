@@ -277,8 +277,13 @@ def card_graph(d):
                 lvl = 0 if c == 0 else 1 + min(3, int(4 * (c - 1) / peak)) if peak > 1 else 1
                 fill = "var(--line)" if lvl == 0 else "var(--teal)"
                 op = ["1", ".3", ".5", ".75", "1"][lvl]
-                out.append(f'<rect class="sweep" style="--d:{1.0 + wi * 0.09:.2f}s" x="{x0 + wi * pitch}" y="{y0 + di * pitch}" '
-                           f'width="{cell}" height="{cell}" fill="{fill}" fill-opacity="{op}"/>')
+                x, y = x0 + wi * pitch, y0 + di * pitch
+                st = f"--d:{wi * 0.025 + di * 0.03:.2f}s;--s:{2.0 + wi * 0.06:.2f}s"
+                out.append(f'<rect class="{"cell" if lvl else "cellbg"}" style="{st}" x="{x}" y="{y}" width="{cell}" height="{cell}" fill="{fill}" fill-opacity="{op}"/>')
+                if lvl == 4:  # busiest days emit a slow radar ping
+                    out.append(f'<rect class="ping" style="--d:{(wi * 7 + di * 3) % 36 / 10:.1f}s" x="{x}" y="{y}" width="{cell}" height="{cell}" fill="none" stroke="var(--teal)" stroke-width="1.5"/>')
+                if date == d.get("asof"):  # today: blinking amber outline
+                    out.append(f'<rect class="blink" x="{x - 2}" y="{y - 2}" width="{cell + 4}" height="{cell + 4}" fill="none" stroke="var(--amber)" stroke-width="2"/>')
     else:  # snapshot: no calendar offline, so show an empty grid and say why
         for wi in range(ncols):
             for di in range(7):

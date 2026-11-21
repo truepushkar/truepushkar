@@ -21,6 +21,13 @@ text{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;fill:var(--
 .zip{opacity:.4;transform-box:fill-box;transform-origin:center;animation:zip 4.2s linear var(--d,0s) infinite}
 .wave{opacity:.35;animation:wave 3.2s linear var(--d,0s) infinite}
 .sweep{transform-box:fill-box;transform-origin:center;animation:sweep 7s linear var(--d,0s) infinite}
+.cell{transform-box:fill-box;transform-origin:center;animation:cellin .5s cubic-bezier(.2,1.5,.4,1) var(--d,0s) backwards,scan 9s linear var(--s,0s) infinite}
+.cellbg{transform-box:fill-box;transform-origin:center;animation:cellin .5s cubic-bezier(.2,1.5,.4,1) var(--d,0s) backwards,scanbg 9s linear var(--s,0s) infinite}
+.ping{opacity:0;transform-box:fill-box;transform-origin:center;animation:ping 3.6s linear var(--d,0s) infinite}
+@keyframes cellin{from{opacity:0;transform:scale(0)}}
+@keyframes scan{0%,6%,100%{transform:scale(1);fill:var(--teal)}1.5%{transform:scale(1.55);fill:var(--ink)}3%{transform:scale(1.15);fill:var(--teal)}}
+@keyframes scanbg{0%,6%,100%{fill:var(--line)}1.5%{fill:var(--mute)}}
+@keyframes ping{0%{opacity:.9;transform:scale(1)}60%,100%{opacity:0;transform:scale(2.4)}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 @keyframes pop{from{opacity:0;transform:scale(.2)}}
 @keyframes fade{from{opacity:0}}
