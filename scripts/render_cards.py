@@ -248,7 +248,7 @@ HEADLINE = [  # (text, number of leading chars drawn in ink; the rest is muted)
 HEADLINE_ALT = "Hi, I'm Pushkar \u2014 A Backend & Web Developer."
 
 
-def headline():
+def headline_plain():
     W, cell, gap, lh = WIDE, 4, 1, 52
     pitch = cell + gap
     adv = 6 * cell + gap  # bold glyphs are 6 cells wide, plus the letter gap
@@ -265,6 +265,62 @@ def headline():
             n += 1
     last = HEADLINE[-1][0]
     out.append(f'<rect class="blink" x="{2 + len(last) * adv}" y="{4 + (len(HEADLINE) - 1) * lh}" width="{5 * cell + 1}" height="{7 * pitch - 1}" fill="var(--blue)"/>')
+    return svg(W, H, "".join(out), HEADLINE_ALT)
+
+
+
+# ---- hero banner: terminal window + starfield + pixel skyline ---------------------------------
+def _rng(seed):
+    while True:
+        seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF
+        yield seed / 0x7FFFFFFF
+
+
+def headline():
+    W, H, cell, gap = WIDE, 178, 4, 1
+    pitch, adv = cell + gap, 6 * cell + gap
+    out = [frame(W, H, "blue")]
+    # window chrome (same language as the profile.yaml card)
+    for i, col in enumerate(("red", "amber", "teal")):
+        out.append(f'<rect x="{16 + i * 12}" y="10" width="7" height="7" fill="var(--{col})"/>')
+    out.append('<text class="mono mute" x="64" y="17" font-size="10" letter-spacing="1">~/truepushkar/README.md</text>')
+    out.append(f'<line x1="14" y1="24" x2="{W - SHADOW - 14}" y2="24" stroke="var(--line)" stroke-width="2"/>')
+    # starfield (kept clear of the text block)
+    r = _rng(7)
+    stars = 0
+    while stars < 46:
+        x, y = int(next(r) * (W - 60)) + 28, int(next(r) * 110) + 32
+        if (x < 760 and 58 < y < 160) or (x < 150 and y < 62):
+            continue
+        sz = 2 if next(r) < .7 else 4
+        col = ("mute", "blue", "ink", "teal", "amber")[int(next(r) * 5)]
+        out.append(f'<rect class="twinkle" style="--d:{next(r) * 3:.2f}s;fill:var(--{col})" x="{x - x % 2}" y="{y - y % 2}" width="{sz}" height="{sz}"/>')
+        stars += 1
+    # pixel skyline, two layers, right-hand side only so it never fights the headline
+    import math
+    for layer, (col, op, amp, ph) in enumerate((("line", .9, 44, 0.0), ("blue", .16, 34, 2.1))):
+        base = H - SHADOW - 10
+        for i in range(0, 11):
+            x = 764 + i * 9
+            if x + 9 > W - SHADOW - 8:
+                break
+            hgt = 8 + amp * (0.5 + 0.5 * math.sin(i * .42 + ph)) * (0.55 + 0.45 * math.sin(i * .13 + ph * 2))
+            hgt = int(hgt // 4 * 4)
+            out.append(f'<rect style="fill:var(--{col});opacity:{op}" x="{x}" y="{base - hgt}" width="9" height="{hgt}"/>')
+    # prompt + title
+    out.append('<text class="mono" x="24" y="52" font-size="12"><tspan style="fill:var(--teal)">$</tspan><tspan class="mute" dx="8">whoami</tspan></text>')
+    lines = [("HI, I'M PUSHKAR", 15), ("- A BACKEND & WEB DEVELOPER.", 1)]
+    n = 0
+    for li, (text, n_ink) in enumerate(lines):
+        y = 66 + li * 52
+        for i, ch in enumerate(text):
+            if ch == " ":
+                continue
+            cls = "ink" if i < n_ink else "mute"
+            out.append(f'<path class="{cls} flick" style="--d:{0.1 + n * 0.04:.2f}s" d="{glyph_d(ch, 24 + i * adv, y, cell, pitch, True)}"/>')
+            n += 1
+    last = lines[-1][0]
+    out.append(f'<rect class="blink" x="{24 + len(last) * adv}" y="{66 + 52}" width="{5 * cell + 1}" height="{7 * pitch - 1}" fill="var(--blue)"/>')
     return svg(W, H, "".join(out), HEADLINE_ALT)
 
 
@@ -384,36 +440,69 @@ def logo_big(name, x, y):
     return "".join(f'<path d="{"".join(v)}" fill="{PAL_ICON[k]}"/>' for k, v in by_col.items())
 
 
+SHORT = {"Cloudflare Workers": "Workers", "GitHub Actions": "Actions", "JavaScript": "JavaScript"}
+
+
 def technology():
-    W, T, G, PER = WIDE, 40, 7, 18
-    rows = -(-len(TECH) // PER)
-    H = rows * T + (rows - 1) * G
-    x0 = (W - (PER * T + (PER - 1) * G)) // 2
-    out = []
-    for i, (name, grp) in enumerate(TECH):
-        r, c = divmod(i, PER)
-        x, y = x0 + c * (T + G), r * (T + G)
-        col = GROUPS[grp][1]
-        out.append(
-            f'<g class="rise" style="--d:{0.05 + i * 0.05:.2f}s"><title>{esc(name)}</title>'
-            f'<path d="{pixbox(SHADOW, SHADOW, T - SHADOW, T - SHADOW, 3)}" transform="translate({x} {y})" style="fill:var(--{col});opacity:.28"/>'
-            f'<path d="{pixbox(1, 1, T - SHADOW - 2, T - SHADOW - 2, 3)}" transform="translate({x} {y})" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>'
-            f'{logo_big(name, x + 6, y + 6)}</g>'
-        )
-    return svg(W, H, "".join(out), "Technology: " + ", ".join(n for n, _ in TECH))
+    """Three panels (backend / frontend / infra), each with 6 labelled tiles in a 3x2 grid."""
+    W, T, GAP = WIDE, 40, 16
+    PW = (W - 2 * GAP) // 3
+    COLS, ROWP = 3, 70
+    PH = 44 + 2 * ROWP + 4
+    out, idx = [], 0
+    for gi, (grp, (label, col)) in enumerate(GROUPS.items()):
+        px = gi * (PW + GAP)
+        g = [f'<g transform="translate({px} 0)">', frame(PW, PH, col)]
+        g.append(f'<rect class="blink" x="16" y="14" width="8" height="8" fill="var(--{col})"/>')
+        g.append(pixel_text(label, 32, 11, 2, 1, 'class="ink"', bold=True))
+        tw = text_width(label, 2, 1, bold=True)
+        g.append(f'<line class="march" x1="{32 + tw + 10}" y1="18" x2="{PW - SHADOW - 14}" y2="18" stroke="var(--line)" stroke-width="3" stroke-dasharray="3 3"/>')
+        items = [n for n, gr in TECH if gr == grp]
+        colw = (PW - SHADOW - 24) // COLS
+        for k, name in enumerate(items):
+            r, c = divmod(k, COLS)
+            cx = 12 + c * colw + colw // 2
+            x, y = cx - T // 2, 38 + r * ROWP
+            g.append(
+                f'<g class="rise" style="--d:{0.05 + idx * 0.05:.2f}s"><title>{esc(name)}</title>'
+                f'<path d="{pixbox(SHADOW, SHADOW, T - SHADOW, T - SHADOW, 3)}" transform="translate({x} {y})" style="fill:var(--{col});opacity:.28"/>'
+                f'<path d="{pixbox(1, 1, T - SHADOW - 2, T - SHADOW - 2, 3)}" transform="translate({x} {y})" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>'
+                f'{logo_big(name, x + 6, y + 6)}'
+                f'<text class="mono mute" x="{cx - 2}" y="{y + T + 14}" font-size="9.5" text-anchor="middle">{esc(SHORT.get(name, name))}</text></g>'
+            )
+            idx += 1
+        g.append("</g>")
+        out.append("".join(g))
+    return svg(W, PH, "".join(out), "Technology: " + ", ".join(n for n, _ in TECH))
 
 
 # ---- section headings + divider (428 wide) ----------------------------------------------
-def heading(label, accent, alt=None):
+def heading(label, accent, alt=None, idx=None):
     W, H = WIDE, 34
     cell, gap = 3, 1
     tw = text_width(label, cell, gap, bold=True)
+    end = W - (52 if idx else 0)
     out = [
         f'<rect class="blink" x="0" y="8" width="10" height="10" fill="var(--{accent})"/>',
         pixel_text(label, 20, 4, cell, gap, 'class="ink"', bold=True),
-        f'<line class="march" x1="{20 + tw + 14}" y1="10" x2="{W}" y2="10" stroke="var(--line)" stroke-width="4" stroke-dasharray="4 4"/>',
+        f'<line class="march" x1="{20 + tw + 14}" y1="10" x2="{end}" y2="10" stroke="var(--line)" stroke-width="4" stroke-dasharray="4 4"/>',
     ]
+    if idx:
+        out.append(f'<text class="mono mute" x="{W}" y="15" font-size="12" letter-spacing="1" text-anchor="end">// {idx:02d}</text>')
     return svg(W, H, "".join(out), alt or label.title())
+
+
+def footer_strip():
+    W, H, cell, gap = WIDE, 44, 3, 1
+    text = "PRESS START TO CONNECT"
+    tw = text_width(text, cell, gap, bold=True)
+    x0 = (W - tw) // 2
+    play = ["10000", "11000", "11100", "11110", "11100", "11000", "10000"]
+    out = [sprite(play, x0 - 36, 8, 3, "teal", 0.2).replace('class="pop"', 'class="pulse"')]
+    out.append(pixel_text(text, x0, 8, cell, gap, 'class="ink flick"', bold=True))
+    out.append(f'<rect class="blink" x="{x0 + tw + 10}" y="8" width="16" height="20" fill="var(--blue)"/>')
+    out.append(f'<line class="march" x1="0" y1="{H - 6}" x2="{W}" y2="{H - 6}" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>')
+    return svg(W, H, "".join(out), "Press start to connect")
 
 
 def divider():
@@ -434,28 +523,44 @@ WIDE_W = 880
 
 
 # ---- README ---------------------------------------------------------------------------------
-def write_readme(chips, socials):
+# Original logos come from https://skillicons.dev (ids from its official icon list).
+# A tool with no skillicons id (e.g. Jinja, YouTube) is shown without an icon / left out - never faked.
+ICON_ID = {
+    "Python": "py", "Flask": "flask", "FastAPI": "fastapi", "MongoDB": "mongodb", "MySQL": "mysql",
+    "SQLite": "sqlite", "HTML": "html", "CSS": "css", "JavaScript": "js", "TypeScript": "ts",
+    "React": "react", "Tailwind": "tailwind", "Cloudflare Workers": "workers", "Docker": "docker",
+    "Git": "git", "GitHub Actions": "githubactions", "Vercel": "vercel", "PowerShell": "powershell",
+}
+SOCIAL_ICON = {"GITHUB": "github", "DISCORD": "discord", "X": "twitter", "EMAIL": "gmail"}  # YOUTUBE: no icon exists
+SKILL = "https://skillicons.dev/icons?i="
+
+
+def write_readme(chips=None, socials=None):
     def img(name, alt, width):
         return f'<img src="{RAW}/{name}.svg" width="{width}" alt="{html.escape(alt)}" />'
 
-    def c(name):  # inline tech chip
-        w, _ = chips[name]
-        return f'<img src="{RAW}/chip-{slug(name)}.svg" width="{w}" height="{CH}" align="absmiddle" alt="{html.escape(name)}" />'
+    def c(name):  # inline tool: original logo + name (name only when skillicons has no icon)
+        ic = ICON_ID.get(name)
+        if not ic:
+            return name
+        return f'<img src="{SKILL}{ic}" width="20" height="20" align="absmiddle" alt="" /> {name}'
 
-    soc = " ".join(
-        f'<a href="{url}"><img src="{RAW}/social-{lab.lower()}.svg" width="{socials[lab]}" height="{CH}" align="absmiddle" alt="{lab.title()}" /></a>'
-        for lab, url, _, _ in SOCIALS)
+    tech_ids = ",".join(ICON_ID[n] for n, _ in TECH if n in ICON_ID)
+    tech_alt = "Technology: " + ", ".join(n for n, _ in TECH if n in ICON_ID)
+    soc = "&nbsp;&nbsp;&nbsp;".join(
+        f'<a href="{url}"><img src="{SKILL}{SOCIAL_ICON[lab]}" width="44" height="44" alt="{lab.title()}" /></a>'
+        for lab, url, _, _ in SOCIALS if lab in SOCIAL_ICON)
 
     parts = [
         f'<p>{img("headline", HEADLINE_ALT, WIDE_W)}</p>',
         "",
         f"I build web apps around problems that are easy to see but needlessly complicated to solve \u2014 attendance systems that replace paper registers, booking that lands the second a window opens, lightweight tools that need no account. Main stack: {c('Python')} + {c('Flask')} with hand-written {c('Jinja')} and whichever database fits \u2014 {c('MongoDB')}, {c('MySQL')} or {c('SQLite')}. Lately mostly {c('TypeScript')} and {c('Cloudflare Workers')}: gateways that let any harness talk to a provider it was never written for, plus small backend-free tools. **29 public repos, 13 of them live** across `truepushkar` and `nullstacks`. I care more about solving the right problem than collecting technologies.",
         "",
-        f'<p>{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), WIDE_W)}</p>',
+        f'<p align="center">{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), WIDE_W)}</p>',
         "",
         f'<p>{img("heading-technology", "Technology", WIDE_W)}</p>',
         "",
-        f'<p align="center">{img("technology", "Technology: " + ", ".join(n for n, _ in TECH), WIDE_W)}</p>',
+        f'<p align="center"><img src="{SKILL}{tech_ids}&perline=18" width="{WIDE_W}" alt="{html.escape(tech_alt)}" /></p>',
         "",
         f'<p>{img("heading-activity", "GitHub Activity", WIDE_W)}</p>',
         "",
@@ -488,22 +593,11 @@ def main():
             if f.endswith(".svg") and not f.startswith("activity-"):  # activity cards come from render_activity.py
                 os.remove(os.path.join(CARDS, f))
     write("headline.svg", headline())
-    chips = {}
-    for name in INLINE_CHIPS:
-        w, content = tech_chip(name)
-        chips[name] = (w, content)
-        write(f"chip-{slug(name)}.svg", content)
-    socials = {}
-    for lab, _, col, sk in SOCIALS:
-        w, content = social_chip(lab, col, sk)
-        socials[lab] = w
-        write(f"social-{lab.lower()}.svg", content)
     write("about.svg", about_card())
-    write("technology.svg", technology())
-    write("heading-technology.svg", heading("TECHNOLOGY", "amber", "Technology"))
-    write("heading-activity.svg", heading("ACTIVITY", "teal", "GitHub Activity"))
+    write("heading-technology.svg", heading("TECHNOLOGY", "amber", "Technology", 1))
+    write("heading-activity.svg", heading("ACTIVITY", "teal", "GitHub Activity", 2))
     write("divider.svg", divider())
-    write_readme(chips, socials)
+    write_readme()
 
 
 if __name__ == "__main__":
