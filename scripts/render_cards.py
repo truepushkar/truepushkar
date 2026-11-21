@@ -15,7 +15,7 @@ SIZING RULE
   An <img> shown narrower than its authored width is scaled DOWN and the type gets
   illegible, so every card is authored at the exact pixel width it renders at in the
   narrow case:
-        FULL = 428   (hero, technology, headings, divider)   -> width=FULL_W (480px, fixed; hero + profile card only)
+        FULL = 428   (legacy)
         WIDE = 880   (headings, technology, activity, divider)  -> width=WIDE_W (880px, fixed)
         BTN  = 84    (social buttons, five per row)          -> width="19.6%"
   Wider columns scale cards UP slightly, which stays sharp. The five buttons are written
@@ -243,14 +243,13 @@ def chip(x, y, label, size=10):
 # ---- headline (428 wide): big bold pixel title, white then grey, like a README hero line -----
 HEADLINE = [  # (text, number of leading chars drawn in ink; the rest is muted)
     ("HI, I'M PUSHKAR", 15),
-    ("- A BACKEND &", 1),
-    ("WEB DEVELOPER.", 0),
+    ("- A BACKEND & WEB DEVELOPER.", 1),
 ]
 HEADLINE_ALT = "Hi, I'm Pushkar \u2014 A Backend & Web Developer."
 
 
 def headline():
-    W, cell, gap, lh = FULL, 3, 1, 40
+    W, cell, gap, lh = WIDE, 4, 1, 52
     pitch = cell + gap
     adv = 6 * cell + gap  # bold glyphs are 6 cells wide, plus the letter gap
     H = len(HEADLINE) * lh + 6
@@ -265,7 +264,7 @@ def headline():
             out.append(f'<path class="{cls} flick" style="--d:{0.1 + n * 0.04:.2f}s" d="{glyph_d(ch, 2 + i * adv, y, cell, pitch, True)}"/>')
             n += 1
     last = HEADLINE[-1][0]
-    out.append(f'<rect class="blink" x="{2 + len(last) * adv}" y="{4 + (len(HEADLINE) - 1) * lh}" width="16" height="27" fill="var(--blue)"/>')
+    out.append(f'<rect class="blink" x="{2 + len(last) * adv}" y="{4 + (len(HEADLINE) - 1) * lh}" width="{5 * cell + 1}" height="{7 * pitch - 1}" fill="var(--blue)"/>')
     return svg(W, H, "".join(out), HEADLINE_ALT)
 
 
@@ -345,23 +344,26 @@ def social_chip(label, col, sprite_key):
 
 # ---- profile.yaml card (428 wide) ---------------------------------------------------------
 def about_card():
-    W, LH = FULL, 17
-    H = 38 + len(YAML) * LH + 12
+    W, LH = WIDE, 22
+    ROWS = -(-len(YAML) // 2)  # two columns: left column fills first
+    H = 40 + ROWS * LH + 12
+    COLX = (18, W // 2 + 10)
     out = [frame(W, H, "blue")]
     for i, col in enumerate(("red", "amber", "teal")):
         out.append(f'<rect x="{16 + i * 12}" y="10" width="7" height="7" fill="var(--{col})"/>')
     out.append('<text class="mono mute" x="64" y="17" font-size="10" letter-spacing="1">profile.yaml</text>')
     out.append(f'<line x1="14" y1="24" x2="{W - SHADOW - 14}" y2="24" stroke="var(--line)" stroke-width="2"/>')
     for i, (k, v) in enumerate(YAML):
-        y = 44 + i * LH
+        c, r = divmod(i, ROWS)
+        x, y = COLX[c], 48 + r * LH
         out.append(
             f'<g class="rise" style="--d:{0.3 + i * 0.12:.2f}s">'
-            f'<text class="mono" x="18" y="{y}" font-size="11.5" style="fill:var(--blue)">{esc(k)}</text>'
-            f'<text class="mono" x="98" y="{y}" font-size="11.5">{esc(v)}</text></g>'
+            f'<text class="mono" x="{x}" y="{y}" font-size="13" style="fill:var(--blue)">{esc(k)}</text>'
+            f'<text class="mono" x="{x + 88}" y="{y}" font-size="13">{esc(v)}</text></g>'
         )
-    last_y = 44 + (len(YAML) - 1) * LH
-    cx = 98 + round(len(YAML[-1][1]) * 6.9) + 6
-    out.append(f'<rect class="blink" x="{cx}" y="{last_y - 10}" width="7" height="12" fill="var(--blue)"/>')
+    c, r = divmod(len(YAML) - 1, ROWS)
+    cx = COLX[c] + 88 + round(len(YAML[-1][1]) * 7.8) + 6
+    out.append(f'<rect class="blink" x="{cx}" y="{48 + r * LH - 11}" width="8" height="14" fill="var(--blue)"/>')
     alt = "profile.yaml: " + "; ".join(f"{k} {v}" for k, v in YAML)
     return svg(W, H, "".join(out), alt)
 
@@ -424,8 +426,8 @@ def divider():
 
 
 # Rendered widths (px) in the README. Fixed pixels instead of 100% so nothing is stretched on wide screens.
-#   FULL_W: compact cards (hero, profile.yaml) - authored 428, shown at 480 (slight, sharp upscale)
-#   WIDE_W: section cards (headings, technology, activity, divider) - authored AND shown at 880,
+#   FULL_W: (unused now, kept for reference) compact 428px cards
+#   WIDE_W: every full-width card (hero, profile.yaml, headings, technology, activity, divider) - authored AND shown at 880,
 #           which is GitHub's max README column; GitHub shrinks them automatically on narrow screens.
 FULL_W = 480
 WIDE_W = 880
@@ -445,11 +447,11 @@ def write_readme(chips, socials):
         for lab, url, _, _ in SOCIALS)
 
     parts = [
-        f'<p>{img("headline", HEADLINE_ALT, FULL_W)}</p>',
+        f'<p>{img("headline", HEADLINE_ALT, WIDE_W)}</p>',
         "",
         f"I build web apps around problems that are easy to see but needlessly complicated to solve \u2014 attendance systems that replace paper registers, booking that lands the second a window opens, lightweight tools that need no account. Main stack: {c('Python')} + {c('Flask')} with hand-written {c('Jinja')} and whichever database fits \u2014 {c('MongoDB')}, {c('MySQL')} or {c('SQLite')}. Lately mostly {c('TypeScript')} and {c('Cloudflare Workers')}: gateways that let any harness talk to a provider it was never written for, plus small backend-free tools. **29 public repos, 13 of them live** across `truepushkar` and `nullstacks`. I care more about solving the right problem than collecting technologies.",
         "",
-        f'<p align="center">{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), FULL_W)}</p>',
+        f'<p>{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), WIDE_W)}</p>',
         "",
         f'<p>{img("heading-technology", "Technology", WIDE_W)}</p>',
         "",
