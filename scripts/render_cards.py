@@ -15,7 +15,8 @@ SIZING RULE
   An <img> shown narrower than its authored width is scaled DOWN and the type gets
   illegible, so every card is authored at the exact pixel width it renders at in the
   narrow case:
-        FULL = 428   (hero, technology, headings, divider)   -> width="100%"
+        FULL = 428   (hero, technology, headings, divider)   -> width=FULL_W (480px, fixed; hero + profile card only)
+        WIDE = 880   (headings, technology, activity, divider)  -> width=WIDE_W (880px, fixed)
         BTN  = 84    (social buttons, five per row)          -> width="19.6%"
   Wider columns scale cards UP slightly, which stays sharp. The five buttons are written
   back-to-back with no whitespace between the tags so 5 x 19.6% never wraps.
@@ -33,7 +34,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 CARDS = os.path.join(ROOT, "cards")
 STATIC = os.environ.get("STATIC") == "1"
 
-FULL, BTN, SHADOW = 428, 84, 4
+FULL, WIDE, BTN, SHADOW = 428, 880, 84, 4
 RAW = "https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards"
 PROFILE = "https://github.com/truepushkar"
 
@@ -382,7 +383,7 @@ def logo_big(name, x, y):
 
 
 def technology():
-    W, T, G, PER = FULL, 40, 7, 9
+    W, T, G, PER = WIDE, 40, 7, 18
     rows = -(-len(TECH) // PER)
     H = rows * T + (rows - 1) * G
     x0 = (W - (PER * T + (PER - 1) * G)) // 2
@@ -402,7 +403,7 @@ def technology():
 
 # ---- section headings + divider (428 wide) ----------------------------------------------
 def heading(label, accent, alt=None):
-    W, H = FULL, 34
+    W, H = WIDE, 34
     cell, gap = 3, 1
     tw = text_width(label, cell, gap, bold=True)
     out = [
@@ -414,12 +415,20 @@ def heading(label, accent, alt=None):
 
 
 def divider():
-    W, H = FULL, 12
+    W, H = WIDE, 12
     cols = ["blue", "red", "amber", "teal"]
     out = []
     for i in range(W // 8):
         out.append(f'<rect class="wave" style="--d:{i * .06:.2f}s;fill:var(--{cols[i % 4]})" x="{i * 8}" y="4" width="4" height="4"/>')
     return svg(W, H, "".join(out), "divider")
+
+
+# Rendered widths (px) in the README. Fixed pixels instead of 100% so nothing is stretched on wide screens.
+#   FULL_W: compact cards (hero, profile.yaml) - authored 428, shown at 480 (slight, sharp upscale)
+#   WIDE_W: section cards (headings, technology, activity, divider) - authored AND shown at 880,
+#           which is GitHub's max README column; GitHub shrinks them automatically on narrow screens.
+FULL_W = 480
+WIDE_W = 880
 
 
 # ---- README ---------------------------------------------------------------------------------
@@ -436,25 +445,25 @@ def write_readme(chips, socials):
         for lab, url, _, _ in SOCIALS)
 
     parts = [
-        f'<p>{img("headline", HEADLINE_ALT, "100%")}</p>',
+        f'<p>{img("headline", HEADLINE_ALT, FULL_W)}</p>',
         "",
         f"I build web apps around problems that are easy to see but needlessly complicated to solve \u2014 attendance systems that replace paper registers, booking that lands the second a window opens, lightweight tools that need no account. Main stack: {c('Python')} + {c('Flask')} with hand-written {c('Jinja')} and whichever database fits \u2014 {c('MongoDB')}, {c('MySQL')} or {c('SQLite')}. Lately mostly {c('TypeScript')} and {c('Cloudflare Workers')}: gateways that let any harness talk to a provider it was never written for, plus small backend-free tools. **29 public repos, 13 of them live** across `truepushkar` and `nullstacks`. I care more about solving the right problem than collecting technologies.",
         "",
-        f'<p align="center">{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), "100%")}</p>',
+        f'<p align="center">{img("about", "profile.yaml: " + "; ".join(k + " " + v for k, v in YAML), FULL_W)}</p>',
         "",
-        f'<p>{img("heading-technology", "Technology", "100%")}</p>',
+        f'<p>{img("heading-technology", "Technology", WIDE_W)}</p>',
         "",
-        f'<p align="center">{img("technology", "Technology: " + ", ".join(n for n, _ in TECH), "100%")}</p>',
+        f'<p align="center">{img("technology", "Technology: " + ", ".join(n for n, _ in TECH), WIDE_W)}</p>',
         "",
-        f'<p>{img("heading-activity", "GitHub Activity", "100%")}</p>',
+        f'<p>{img("heading-activity", "GitHub Activity", WIDE_W)}</p>',
         "",
-        f'<p align="center">{img("activity-overview", "GitHub statistics and top languages", "100%")}</p>',
+        f'<p align="center">{img("activity-overview", "GitHub statistics and top languages", WIDE_W)}</p>',
         "",
-        f'<p align="center">{img("activity-streak", "GitHub contribution streak", "100%")}</p>',
+        f'<p align="center">{img("activity-streak", "GitHub contribution streak", WIDE_W)}</p>',
         "",
-        f'<p align="center">{img("activity-graph", "GitHub contribution graph", "100%")}</p>',
+        f'<p align="center">{img("activity-graph", "GitHub contribution graph", WIDE_W)}</p>',
         "",
-        f'<p>{img("divider", "", "100%")}</p>',
+        f'<p>{img("divider", "", WIDE_W)}</p>',
         "",
         f'<p align="center">{soc}</p>',
         "",

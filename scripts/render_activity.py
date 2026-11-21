@@ -30,7 +30,7 @@ import render_cards as rc  # noqa: E402  (shared fonts, CSS, helpers)
 LOGIN = os.environ.get("GH_LOGIN", "truepushkar")
 ORGS = [o for o in os.environ.get("GH_ORGS", "nullstacks").split(",") if o]
 LANG_CAP = 1_500_000  # bytes per language per repo, so data-heavy repos can't drown out the rest
-W = rc.FULL
+W = rc.WIDE
 
 # ---- snapshot data (from ALL-REPOS.md, 2026-11-20) ---------------------------------------------
 SNAPSHOT = dict(
@@ -183,7 +183,7 @@ def card_overview(d):
     top = max(v for _, v in langs) if langs else 1
     out.append('<text class="mono mute" x="18" y="80" font-size="8.5" letter-spacing="1.5">TOP LANGUAGES</text>')
     palette = ["blue", "red", "amber", "teal"]
-    SEGS, COLW = 12, 194
+    SEGS, COLW = 36, (W - rc.SHADOW - 36) // 2
     for i, (name, val) in enumerate(langs):
         r, c = divmod(i, 2)
         x0, y = 18 + c * COLW, 90 + r * 16
@@ -214,12 +214,13 @@ def card_streak(d):
     items = [("CONTRIBUTIONS \u00b7 1Y", d["total"], "blue"), ("CURRENT STREAK", d["current"], "red"),
              ("LONGEST \u00b7 1Y", d["longest"], "amber")]
     out = [rc.frame(W, H, "red")]
+    pitch = (W - rc.SHADOW - 36) // len(items)
     for i, (lab, val, col) in enumerate(items):
-        x = 18 + i * 138
+        x = 18 + i * pitch
         svg_num, h = num(val, x, 18, 4, col, 0.2 + i * 0.15)
         out.append(svg_num)
         out.append(f'<text class="mono mute" x="{x}" y="68" font-size="9" letter-spacing="1">{lab}</text>')
-    out.append(f'<g class="pulse">{rc.sprite(FLAME, 18 + 138 + 108, 52, 3, "red", 0.8)}</g>')
+    out.append(f'<g class="pulse">{rc.sprite(FLAME, 18 + pitch + 108, 52, 3, "red", 0.8)}</g>')
     out.append(footer(d).replace("{y}", str(H - 14)))
     return rc.svg(W, H, "".join(out), "GitHub contribution streak")
 
@@ -228,8 +229,8 @@ MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", 
 
 
 def card_graph(d):
-    H = 124
-    cell, pitch = 6, 7
+    H = 170
+    cell, pitch = 12, 14
     out = [rc.frame(W, H, "teal")]
     weeks = d["weeks"]
     ncols = len(weeks) if weeks else 53
@@ -244,7 +245,7 @@ def card_graph(d):
             if m != last_month:
                 last_month = m
                 if wi - last_wi >= 3 and wi * pitch + 24 < ncols * pitch:  # skip crowded labels
-                    out.append(f'<text class="mono mute" x="{x0 + wi * pitch}" y="35" font-size="7.5">{MONTHS[m]}</text>')
+                    out.append(f'<text class="mono mute" x="{x0 + wi * pitch}" y="34" font-size="9">{MONTHS[m]}</text>')
                     last_wi = wi
             for di, (date, c) in enumerate(w):
                 lvl = 0 if c == 0 else 1 + min(3, int(4 * (c - 1) / peak)) if peak > 1 else 1

@@ -4,21 +4,18 @@ I build web apps around problems that are easy to see but needlessly complicated
 
 <p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/about.svg" width="480" alt="profile.yaml: focus: Backend &amp; Web Development; stack: Python · Flask · Jinja; also: TypeScript · React · Workers; org: @nullstacks · since 2022; building: Small, sharp, composable tools" /></p>
 
-<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/heading-technology.svg" width="480" alt="Technology" /></p>
+<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/heading-technology.svg" width="880" alt="Technology" /></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/technology.svg" width="480" alt="Technology: Python, Flask, FastAPI, MongoDB, MySQL, SQLite, HTML, CSS, JavaScript, TypeScript, React, Tailwind, Cloudflare Workers, Docker, Git, GitHub Actions, Vercel, PowerShell" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/technology.svg" width="880" alt="Technology: Python, Flask, FastAPI, MongoDB, MySQL, SQLite, HTML, CSS, JavaScript, TypeScript, React, Tailwind, Cloudflare Workers, Docker, Git, GitHub Actions, Vercel, PowerShell" /></p>
 
-<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/heading-activity.svg" width="480" alt="GitHub Activity" /></p>
+<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/heading-activity.svg" width="880" alt="GitHub Activity" /></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-overview.svg" width="480" alt="GitHub statistics and top languages" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-overview.svg" width="880" alt="GitHub statistics and top languages" /></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-streak.svg" width="480" alt="GitHub contribution streak" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-streak.svg" width="880" alt="GitHub contribution streak" /></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-graph.svg" width="480" alt="GitHub contribution graph" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/activity-graph.svg" width="880" alt="GitHub contribution graph" /></p>
 
-<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/divider.svg" width="480" alt="" /></p>
+<p><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/divider.svg" width="880" alt="" /></p>
 
 <p align="center"><a href="https://github.com/truepushkar"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/social-github.svg" width="73" height="24" align="absmiddle" alt="Github" /></a> <a href="https://www.youtube.com/@truepushkar"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/social-youtube.svg" width="79" height="24" align="absmiddle" alt="Youtube" /></a> <a href="https://x.com/TruePushkar"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/social-x.svg" width="43" height="24" align="absmiddle" alt="X" /></a> <a href="https://discord.com/users/1141179236309287082"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/social-discord.svg" width="79" height="24" align="absmiddle" alt="Discord" /></a> <a href="mailto:truepushkar@gmail.com"><img src="https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards/social-email.svg" width="67" height="24" align="absmiddle" alt="Email" /></a></p>
-
-<p align="center">
-  <img src="https://komarev.com/ghpvc/?username=truepushkar&label=Profile%20views&color=a78bfa&style=flat-square" alt="Profile views" />
