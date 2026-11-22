@@ -35,6 +35,7 @@ CARDS = os.path.join(ROOT, "cards")
 STATIC = os.environ.get("STATIC") == "1"
 
 FULL, WIDE, BTN, SHADOW = 428, 880, 84, 4
+MW = 320  # mobile card width: phone README columns are ~310-370px, so these render ~1:1
 RAW = "https://raw.githubusercontent.com/truepushkar/truepushkar/main/cards"
 PROFILE = "https://github.com/truepushkar"
 
@@ -484,8 +485,8 @@ def technology():
 
 
 # ---- section headings + divider (428 wide) ----------------------------------------------
-def heading(label, accent, alt=None, idx=None):
-    W, H = WIDE, 34
+def heading(label, accent, alt=None, idx=None, W=WIDE):
+    H = 34
     cell, gap = 3, 1
     tw = text_width(label, cell, gap, bold=True)
     end = W - (52 if idx else 0)
@@ -512,13 +513,74 @@ def footer_strip():
     return svg(W, H, "".join(out), "Press start to connect")
 
 
-def divider():
-    W, H = WIDE, 12
+def divider(W=WIDE):
+    H = 12
     cols = ["blue", "red", "amber", "teal"]
     out = []
     for i in range(W // 8):
         out.append(f'<rect class="wave" style="--d:{i * .06:.2f}s;fill:var(--{cols[i % 4]})" x="{i * 8}" y="4" width="4" height="4"/>')
     return svg(W, H, "".join(out), "divider")
+
+
+
+# ---- mobile variants (MW = 320 wide, shown at max-width:600px via <picture>) ---------------------
+def headline_m():
+    W, H = MW, 150
+    out = [frame(W, H, "blue")]
+    for i, col in enumerate(("red", "amber", "teal")):
+        out.append(f'<rect x="{16 + i * 12}" y="10" width="7" height="7" fill="var(--{col})"/>')
+    out.append('<text class="mono mute" x="64" y="17" font-size="10" letter-spacing="1">~/truepushkar/README.md</text>')
+    out.append(f'<line x1="14" y1="24" x2="{W - SHADOW - 14}" y2="24" stroke="var(--line)" stroke-width="2"/>')
+    r, stars = _rng(7), 0
+    while stars < 14:  # starfield, kept clear of the text block
+        x, y = int(next(r) * (W - 60)) + 28, int(next(r) * 105) + 32
+        if (60 < y < 92) or (x < 215 and y >= 92) or (x < 130 and y < 60):
+            continue
+        sz = 2 if next(r) < .7 else 4
+        col = ("mute", "blue", "ink", "teal", "amber")[int(next(r) * 5)]
+        out.append(f'<rect class="twinkle" style="--d:{next(r) * 3:.2f}s;fill:var(--{col})" x="{x - x % 2}" y="{y - y % 2}" width="{sz}" height="{sz}"/>')
+        stars += 1
+    for layer, (col, op, amp, ph) in enumerate((("line", .9, 30, 0.0), ("blue", .16, 24, 2.1))):
+        base = H - SHADOW - 10
+        for i in range(6):
+            x = 252 + i * 9
+            hgt = 8 + amp * (0.5 + 0.5 * math.sin(i * .42 + ph)) * (0.55 + 0.45 * math.sin(i * .13 + ph * 2))
+            hgt = int(hgt // 4 * 4)
+            out.append(f'<rect style="fill:var(--{col});opacity:{op}" x="{x}" y="{base - hgt}" width="9" height="{hgt}"/>')
+    out.append('<text class="mono" x="16" y="50" font-size="12"><tspan style="fill:var(--teal)">$</tspan><tspan class="mute" dx="8">whoami</tspan></text>')
+    # (text, y, cell, number of leading ink chars): big name, then the role over two lines
+    lines = [("HI, I'M PUSHKAR", 60, 3, 15), ("- A BACKEND &", 92, 2, 1), ("WEB DEVELOPER.", 114, 2, 0)]
+    n = 0
+    for text, y, cell, n_ink in lines:
+        adv = 6 * cell + 1
+        for i, ch in enumerate(text):
+            if ch == " ":
+                continue
+            cls = "ink" if i < n_ink else "mute"
+            out.append(f'<path class="{cls} flick" style="--d:{0.1 + n * 0.04:.2f}s" d="{glyph_d(ch, 16 + i * adv, y, cell, cell + 1, True)}"/>')
+            n += 1
+    out.append(f'<rect class="blink" x="{16 + 14 * 13}" y="114" width="10" height="14" fill="var(--blue)"/>')
+    return svg(W, H, "".join(out), HEADLINE_ALT)
+
+
+def about_m():
+    W, LH = MW, 22
+    H = 48 + (len(YAML) - 1) * LH + 16
+    out = [frame(W, H, "blue")]
+    for i, col in enumerate(("red", "amber", "teal")):
+        out.append(f'<rect x="{16 + i * 12}" y="10" width="7" height="7" fill="var(--{col})"/>')
+    out.append('<text class="mono mute" x="64" y="17" font-size="10" letter-spacing="1">profile.yaml</text>')
+    out.append(f'<line x1="14" y1="24" x2="{W - SHADOW - 14}" y2="24" stroke="var(--line)" stroke-width="2"/>')
+    for i, (k, v) in enumerate(YAML):
+        y = 48 + i * LH
+        out.append(
+            f'<g class="rise" style="--d:{0.3 + i * 0.12:.2f}s">'
+            f'<text class="mono" x="16" y="{y}" font-size="11" style="fill:var(--blue)">{esc(k)}</text>'
+            f'<text class="mono" x="86" y="{y}" font-size="11">{esc(v)}</text></g>')
+    cx = 86 + round(len(YAML[-1][1]) * 6.6) + 6
+    out.append(f'<rect class="blink" x="{cx}" y="{48 + (len(YAML) - 1) * LH - 11}" width="7" height="13" fill="var(--blue)"/>')
+    alt = "profile.yaml: " + "; ".join(f"{k} {v}" for k, v in YAML)
+    return svg(W, H, "".join(out), alt)
 
 
 # Rendered widths (px) in the README. Fixed pixels instead of 100% so nothing is stretched on wide screens.
@@ -542,8 +604,12 @@ SKILL = "https://skillicons.dev/icons?i="
 
 
 def write_readme(socials):
-    def img(name, alt, width):
-        return f'<img src="{RAW}/{name}.svg" width="{width}" alt="{html.escape(alt)}" />'
+    def img(name, alt, width, mobile=True):
+        """Desktop card as the <img>; phones (max-width:600px) get the <name>-m.svg variant."""
+        tag = f'<img src="{RAW}/{name}.svg" width="{width}" alt="{html.escape(alt)}" />'
+        if not mobile:
+            return tag
+        return f'<picture><source media="(max-width: 600px)" srcset="{RAW}/{name}-m.svg" />{tag}</picture>'
 
     def c(name):  # inline tool: original logo + name (name only when skillicons has no icon)
         ic = ICON_ID.get(name)
@@ -566,7 +632,7 @@ def write_readme(socials):
         "",
         f'<p>{img("heading-technology", "Technology", WIDE_W)}</p>',
         "",
-        f'<p align="center"><img src="{SKILL}{tech_ids}&perline=18" width="{WIDE_W}" alt="{html.escape(tech_alt)}" /></p>',
+        f'<p align="center"><picture><source media="(max-width: 600px)" srcset="{SKILL}{tech_ids}&perline=6" /><img src="{SKILL}{tech_ids}&perline=18" width="{WIDE_W}" alt="{html.escape(tech_alt)}" /></picture></p>',
         "",
         f'<p>{img("heading-activity", "GitHub Activity", WIDE_W)}</p>',
         "",
@@ -608,6 +674,11 @@ def main():
     write("heading-technology.svg", heading("TECHNOLOGY", "amber", "Technology", 1))
     write("heading-activity.svg", heading("ACTIVITY", "teal", "GitHub Activity", 2))
     write("divider.svg", divider())
+    write("headline-m.svg", headline_m())
+    write("about-m.svg", about_m())
+    write("heading-technology-m.svg", heading("TECHNOLOGY", "amber", "Technology", 1, W=MW))
+    write("heading-activity-m.svg", heading("ACTIVITY", "teal", "GitHub Activity", 2, W=MW))
+    write("divider-m.svg", divider(MW))
     write_readme(socials)
 
 

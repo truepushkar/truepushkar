@@ -295,10 +295,126 @@ def card_graph(d):
     return rc.svg(W, H, "".join(out), "GitHub contribution graph")
 
 
+# ---- mobile variants (rc.MW wide, shown at max-width:600px via <picture>) -----------------------------
+MW = rc.MW
+
+
+def card_overview_m(d):
+    """2x2 stat tiles, then the language bar and one language per row."""
+    H = 306
+    inner = MW - rc.SHADOW - 32
+    out = [rc.frame(MW, H, "blue")]
+    items = [("STARS", d["stars"], "blue", STAR), ("REPOS", d["repos"], "red", REPO),
+             ("COMMITS", d["commits"], "amber", COMMIT), ("PRS \u00b7 1Y", d["prs"], "teal", PR)]
+    colw = inner // 2
+    for i, (lab, val, col, spr) in enumerate(items):
+        r, c = divmod(i, 2)
+        x, y0 = 16 + c * colw + (12 if c else 0), 14 + r * 50
+        if c:
+            out.append(_sep(16 + colw, y0 + 2, y0 + 44))
+        out.append(rc.sprite(spr, x, y0 + 8, 3, col, 0.2 + i * 0.1))
+        out.append(num(val, x + 34, y0 + 4, 3, col, 0.2 + i * 0.1, max_w=colw - 34 - 18)[0])
+        out.append(f'<text class="mono mute" x="{x + 34}" y="{y0 + 40}" font-size="8.5" letter-spacing="1">{lab}</text>')
+    out.append(f'<line class="march" x1="16" y1="120" x2="{MW - rc.SHADOW - 16}" y2="120" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>')
+
+    langs = d["langs"][:7]
+    total = sum(v for _, v in langs) or 1
+    all_total = d.get("lang_total") or total
+    top = max(v for _, v in langs) if langs else 1
+    out.append('<text class="mono mute" x="16" y="140" font-size="8.5" letter-spacing="1.5">TOP LANGUAGES</text>')
+    x = 16
+    for i, (name, val) in enumerate(langs):
+        w = max(6, round(inner * val / total)) - 2
+        col, op = PALETTE[i % 4], (1 if i < 4 else .55)
+        out.append(f'<rect class="pop" style="--d:{0.2 + i * 0.08:.2f}s;fill:var(--{col});opacity:{op}" x="{x}" y="148" width="{w}" height="10"/>')
+        x += w + 2
+    SEGS = 20
+    for i, (name, val) in enumerate(langs):
+        y = 174 + i * 18
+        col, op = PALETTE[i % 4], (1 if i < 4 else .55)
+        filled = max(1, round(SEGS * val / top))
+        out.append(f'<rect x="16" y="{y}" width="8" height="8" style="fill:var(--{col});opacity:{op}"/>')
+        out.append(f'<text class="mono" x="32" y="{y + 8}" font-size="10">{rc.esc(name)}</text>')
+        for sgi in range(SEGS):
+            on = sgi < filled
+            fill = f"var(--{col})" if on else "var(--line)"
+            cls = f'class="pop" style="--d:{0.2 + i * 0.08 + sgi * 0.02:.2f}s"' if on else ""
+            out.append(f'<rect {cls} x="{108 + sgi * 6}" y="{y}" width="5" height="9" fill="{fill}"/>')
+        out.append(f'<text class="mono mute" x="{MW - rc.SHADOW - 16}" y="{y + 8}" font-size="10" text-anchor="end">{100.0 * val / all_total:.1f}%</text>')
+    return rc.svg(MW, H, "".join(out), "GitHub statistics and top languages")
+
+
+def card_streak_m(d):
+    """Three stats stacked vertically (icon, big number, label)."""
+    H = 172
+    items = [("CONTRIBUTIONS \u00b7 1Y", d["total"], "blue", CAL), ("CURRENT STREAK", d["current"], "red", FLAME),
+             ("LONGEST \u00b7 1Y", d["longest"], "amber", TROPHY)]
+    out = [rc.frame(MW, H, "red")]
+    for i, (lab, val, col, spr) in enumerate(items):
+        y0 = 12 + i * 52
+        if i:
+            out.append(f'<line class="march" x1="16" y1="{y0 - 4}" x2="{MW - rc.SHADOW - 16}" y2="{y0 - 4}" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>')
+        out.append(f'<g class="{"pulse" if i == 1 else ""}">{rc.sprite(spr, 18, y0 + 8, 3, col, 0.2 + i * 0.15)}</g>')
+        out.append(num(val, 58, y0 + 2, 4, col, 0.2 + i * 0.15, max_w=MW - 58 - 30)[0])
+        out.append(f'<text class="mono mute" x="58" y="{y0 + 42}" font-size="9" letter-spacing="1">{lab}</text>')
+    return rc.svg(MW, H, "".join(out), "GitHub contribution streak")
+
+
+def card_graph_m(d):
+    """Last 26 weeks with bigger cells (a 53-week grid would be ~5px pixels on a phone)."""
+    H, cell, pitch, NW = 158, 9, 11, 26
+    weeks = d["weeks"][-NW:] if d["weeks"] else None
+    ncols = len(weeks) if weeks else NW
+    x0, y0 = 16, 44
+    out = [rc.frame(MW, H, "teal")]
+    out.append('<text class="mono mute" x="16" y="22" font-size="9" letter-spacing="1">CONTRIBUTIONS \u00b7 6 MONTHS</text>')
+    xr, sq = MW - rc.SHADOW - 16, 9
+    lx = xr - 18 - 3 - 5 * sq
+    out.append(f'<text class="mono mute" x="{lx - 5}" y="22" font-size="7.5" text-anchor="end">LESS</text>')
+    for k in range(5):
+        f = "var(--line)" if k == 0 else "var(--teal)"
+        out.append(f'<rect x="{lx + k * sq}" y="15" width="7" height="7" fill="{f}" fill-opacity="{["1", ".3", ".5", ".75", "1"][k]}"/>')
+    out.append(f'<text class="mono mute" x="{lx + 5 * sq + 3}" y="22" font-size="7.5">MORE</text>')
+    if weeks:
+        peak = max((c for w in d["weeks"] for _, c in w), default=0) or 1
+        last_month, last_wi = None, -9
+        for wi, w in enumerate(weeks):
+            m = int(w[0][0][5:7]) - 1
+            if m != last_month:
+                last_month = m
+                if wi - last_wi >= 3 and wi * pitch + 28 < ncols * pitch:
+                    out.append(f'<text class="mono mute" x="{x0 + wi * pitch}" y="38" font-size="8.5">{MONTHS[m]}</text>')
+                    last_wi = wi
+            for di, (date, c) in enumerate(w):
+                lvl = 0 if c == 0 else 1 + min(3, int(4 * (c - 1) / peak)) if peak > 1 else 1
+                fill = "var(--line)" if lvl == 0 else "var(--teal)"
+                op = ["1", ".3", ".5", ".75", "1"][lvl]
+                x, y = x0 + wi * pitch, y0 + di * pitch
+                st = f"--d:{wi * 0.04 + di * 0.03:.2f}s;--s:{2.0 + wi * 0.1:.2f}s"
+                out.append(f'<rect class="{"cell" if lvl else "cellbg"}" style="{st}" x="{x}" y="{y}" width="{cell}" height="{cell}" fill="{fill}" fill-opacity="{op}"/>')
+                if lvl == 4:
+                    out.append(f'<rect class="ping" style="--d:{(wi * 7 + di * 3) % 36 / 10:.1f}s" x="{x}" y="{y}" width="{cell}" height="{cell}" fill="none" stroke="var(--teal)" stroke-width="1.5"/>')
+                if date == d.get("asof"):
+                    out.append(f'<rect class="blink" x="{x - 2}" y="{y - 2}" width="{cell + 4}" height="{cell + 4}" fill="none" stroke="var(--amber)" stroke-width="2"/>')
+    else:
+        for wi in range(ncols):
+            for di in range(7):
+                out.append(f'<rect x="{x0 + wi * pitch}" y="{y0 + di * pitch}" width="{cell}" height="{cell}" fill="var(--line)" fill-opacity=".6"/>')
+        out.append(f'<rect x="{MW // 2 - 98}" y="{y0 + 28}" width="192" height="22" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>'
+                   f'<text class="mono blink" x="{MW // 2 - 2}" y="{y0 + 43}" font-size="8.5" text-anchor="middle" '
+                   f'style="fill:var(--ink)">WAITING FOR FIRST RUN</text>')
+    word = "SNAPSHOT" if d["mode"] == "snapshot" else "UPDATED"
+    out.append(f'<text class="mono mute" x="16" y="{H - 14}" font-size="8" letter-spacing=".5">{word} {d["asof"]}</text>')
+    return rc.svg(MW, H, "".join(out), "GitHub contribution graph")
+
+
 def render(d):
     rc.write("activity-overview.svg", card_overview(d))
     rc.write("activity-streak.svg", card_streak(d))
     rc.write("activity-graph.svg", card_graph(d))
+    rc.write("activity-overview-m.svg", card_overview_m(d))
+    rc.write("activity-streak-m.svg", card_streak_m(d))
+    rc.write("activity-graph-m.svg", card_graph_m(d))
 
 
 def main(argv):
