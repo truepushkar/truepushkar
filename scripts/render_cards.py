@@ -618,6 +618,9 @@ def write_readme(socials):
         return f'<kbd><img src="{SKILL}{ic}" width="18" height="18" align="absmiddle" alt="" /> {name}</kbd>'
 
     tech_ids = ",".join(ICON_ID[n] for n, _ in TECH if n in ICON_ID)
+    # srcset is itself comma-separated and GitHub splits it on commas, so a raw "py,flask,..." URL
+    # collapses to just "py" (one giant Python icon). %2C keeps the URL as a single candidate.
+    tech_ids_enc = tech_ids.replace(",", "%2C")
     tech_alt = "Technology: " + ", ".join(n for n, _ in TECH if n in ICON_ID)
     soc = " ".join(
         f'<a href="{url}"><img src="{RAW}/social-{lab.lower()}.svg" width="{socials[lab]}" height="{CH}" align="absmiddle" alt="{lab.title()}" /></a>'
@@ -632,7 +635,7 @@ def write_readme(socials):
         "",
         f'<p>{img("heading-technology", "Technology", WIDE_W)}</p>',
         "",
-        f'<p align="center"><picture><source media="(max-width: 600px)" srcset="{SKILL}{tech_ids}&perline=6" /><img src="{SKILL}{tech_ids}&perline=18" width="{WIDE_W}" alt="{html.escape(tech_alt)}" /></picture></p>',
+        f'<p align="center"><picture><source media="(max-width: 600px)" srcset="{SKILL}{tech_ids_enc}&perline=6" /><img src="{SKILL}{tech_ids}&perline=18" width="{WIDE_W}" alt="{html.escape(tech_alt)}" /></picture></p>',
         "",
         f'<p>{img("heading-activity", "GitHub Activity", WIDE_W)}</p>',
         "",
